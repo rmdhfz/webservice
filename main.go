@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,7 +8,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var DB *sql.DB
+type Product struct {
+	ID    int
+	Name  string
+	Price int
+}
 
 func Server() *mux.Router {
 	router := mux.NewRouter()
@@ -19,8 +22,8 @@ func Server() *mux.Router {
 }
 
 func main() {
-	mysqlDB := connect()
-	defer mysqlDB.Close()
+	conn := connect()
+	defer conn.Close()
 	router := Server()
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
@@ -41,8 +44,22 @@ func handleHome(writer http.ResponseWriter, request *http.Request) {
 }
 
 func BrowseProduct(writer http.ResponseWriter, request *http.Request) {
-	rows, err := mysqlDB.Query("SELECT * FROM products")
-	renderJson(writer, map[string]interface{}{
-		"message": "products",
-	})
+	conn := connect()
+	defer conn.Close()
+	rows, err := conn.Query("SELECT * FROM products")
+	if err != nil {
+		renderJson(writer, map[string]interface{}{
+			"message": "not found",
+		})
+	}
+	var products []*Product
+	for rows.Next() {
+		var product Product
+		if err := rows.Scan(&product.ID, &product.Name, &product.Price); err != nil {
+			log.Print(err)
+		} else {
+			products = append(products, &product)
+		}
+	}
+	renderJson(writer, products)
 }
