@@ -23,7 +23,6 @@ func Server() *mux.Router {
 	router.HandleFunc("/api/products", BrowseProduct).Methods("GET")
 	router.HandleFunc("/api/products", CreateProduct).Methods("POST")
 	router.HandleFunc("/api/products/{id}", DeleteProduct).Methods("DELETE")
-	router.HandleFunc("/api/products/{id}", UpdateProduct).Methods("PATCH")
 	return router
 }
 
@@ -100,7 +99,15 @@ func CreateProduct(w http.ResponseWriter, req *http.Request) {
 func DeleteProduct(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	ProductID := mux.Vars(req)["id"]
-
+	if ProductID == "" {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
+			Title:  "ValidationError",
+			Status: strconv.Itoa(http.StatusUnprocessableEntity),
+			Detail: "Given request Body was invalid",
+		}})
+		return
+	}
 	conn := connect()
 	defer conn.Close()
 
@@ -115,7 +122,6 @@ func DeleteProduct(w http.ResponseWriter, req *http.Request) {
 		log.Print(err)
 		return
 	}
-
 	if affected == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
@@ -125,31 +131,4 @@ func DeleteProduct(w http.ResponseWriter, req *http.Request) {
 		}})
 	}
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func UpdateProduct(w http.ResponseWriter, req *http.Request) {
-	productID := mux.Vars(req)["id"]
-	var product Product
-	err := jsonapi.UnmarshalPayload(req.Body, &product)
-	if err != nil {
-		w.Header().Set("Content-Type", jsonapi.MediaType)
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
-			Title:  "ValidationError",
-			Detail: "Given request is invalid",
-			Status: strconv.Itoa(http.StatusUnprocessableEntity),
-		}})
-		return
-	}
-	conn := connect()
-	defer conn.Close()
-
-	query, err := conn.Prepare("UPDATE products SET name = ?, price = ? WHERE id = ?")
-	if err != nil {
-		log.Print(err)
-		return
-	}
-	query.Exec(product.Name, product.Price, productID)
-	product.ID, _ = strconv.ParseInt(productID, 10, 64)
-	renderJson(w, &product)
 }

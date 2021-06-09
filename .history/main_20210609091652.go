@@ -144,12 +144,10 @@ func UpdateProduct(w http.ResponseWriter, req *http.Request) {
 	conn := connect()
 	defer conn.Close()
 
-	query, err := conn.Prepare("UPDATE products SET name = ?, price = ? WHERE id = ?")
-	if err != nil {
-		log.Print(err)
-		return
-	}
+	query, err := mysqlDB.Prepare("UPDATE products SET name = ?, price = ? WHERE id = ?")
 	query.Exec(product.Name, product.Price, productID)
+	checkError(err)
+
 	product.ID, _ = strconv.ParseInt(productID, 10, 64)
-	renderJson(w, &product)
+	renderJson(res, &product)
 }

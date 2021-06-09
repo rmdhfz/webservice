@@ -150,6 +150,7 @@ func UpdateProduct(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	query.Exec(product.Name, product.Price, productID)
+
 	product.ID, _ = strconv.ParseInt(productID, 10, 64)
-	renderJson(w, &product)
+	renderJson(res, &product)
 }
