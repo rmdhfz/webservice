@@ -49,10 +49,8 @@ func isExist(query string, args string) bool {
 	conn := connect()
 	defer conn.Close()
 	err := conn.QueryRow(query, args).Scan(&args)
-	if err != nil {
-		if err != sql.ErrNoRows {
-			log.Fatalf("Error checking if row exist '%s' %v", args, err)
-		}
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatalf("Error checking if row exist '%s' %v", args, err)
 		return false
 	} else {
 		return true
@@ -144,8 +142,7 @@ func DeleteProduct(w http.ResponseWriter, req *http.Request) {
 
 func UpdateProduct(w http.ResponseWriter, req *http.Request) {
 	productID := mux.Vars(req)["id"]
-	isExist_ := isExist("SELECT id FROM products WHERE id = ? ", productID)
-	log.Print(isExist_)
+	isExist_ := isExist("SELECT id FROM products WHERE id=$1", productID)
 	if !isExist_ {
 		w.WriteHeader(http.StatusNotFound)
 		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{

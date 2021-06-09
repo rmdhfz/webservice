@@ -49,10 +49,8 @@ func isExist(query string, args string) bool {
 	conn := connect()
 	defer conn.Close()
 	err := conn.QueryRow(query, args).Scan(&args)
-	if err != nil {
-		if err != sql.ErrNoRows {
-			log.Fatalf("Error checking if row exist '%s' %v", args, err)
-		}
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatalf("Error checking if row exist '%s' %v", args, err)
 		return false
 	} else {
 		return true

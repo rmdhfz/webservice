@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -43,20 +42,6 @@ func handleHome(writer http.ResponseWriter, request *http.Request) {
 		"message": "Hai",
 	}
 	json.NewEncoder(writer).Encode(response)
-}
-
-func isExist(query string, args string) bool {
-	conn := connect()
-	defer conn.Close()
-	err := conn.QueryRow(query, args).Scan(&args)
-	if err != nil {
-		if err != sql.ErrNoRows {
-			log.Fatalf("Error checking if row exist '%s' %v", args, err)
-		}
-		return false
-	} else {
-		return true
-	}
 }
 
 func BrowseProduct(writer http.ResponseWriter, request *http.Request) {
@@ -144,37 +129,33 @@ func DeleteProduct(w http.ResponseWriter, req *http.Request) {
 
 func UpdateProduct(w http.ResponseWriter, req *http.Request) {
 	productID := mux.Vars(req)["id"]
-	isExist_ := isExist("SELECT id FROM products WHERE id = ? ", productID)
-	log.Print(isExist_)
-	if !isExist_ {
-		w.WriteHeader(http.StatusNotFound)
-		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
-			Title:  "Not Found",
-			Status: strconv.Itoa(http.StatusNotFound),
-			Detail: fmt.Sprintf("Product with id %s not found", productID),
-		}})
-	} else {
-		var product Product
-		err := jsonapi.UnmarshalPayload(req.Body, &product)
-		if err != nil {
-			w.Header().Set("Content-Type", jsonapi.MediaType)
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
-				Title:  "ValidationError",
-				Detail: "Given request is invalid",
-				Status: strconv.Itoa(http.StatusUnprocessableEntity),
-			}})
-			return
-		}
-		conn := connect()
-		defer conn.Close()
-		query, err := conn.Prepare("UPDATE products SET name = ?, price = ? WHERE id = ?")
-		if err != nil {
-			log.Print(err)
-			return
-		}
-		query.Exec(product.Name, product.Price, productID)
-		product.ID, _ = strconv.ParseInt(productID, 10, 64)
-		renderJson(w, &product)
+	_, err := conn.Exec("SELECT * FROM products WHERE id = ?", ProductID)
+	if err != nil {
+		renderJson(w, map[string]interface{}{
+			"message": "not found",
+		})
 	}
+	var product Product
+	err := jsonapi.UnmarshalPayload(req.Body, &product)
+	if err != nil {
+		w.Header().Set("Content-Type", jsonapi.MediaType)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
+			Title:  "ValidationError",
+			Detail: "Given request is invalid",
+			Status: strconv.Itoa(http.StatusUnprocessableEntity),
+		}})
+		return
+	}
+	conn := connect()
+	defer conn.Close()
+
+	query, err := conn.Prepare("UPDATE products SET name = ?, price = ? WHERE id = ?")
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	query.Exec(product.Name, product.Price, productID)
+	product.ID, _ = strconv.ParseInt(productID, 10, 64)
+	renderJson(w, &product)
 }
