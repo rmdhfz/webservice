@@ -35,7 +35,6 @@ func Server() *mux.Router {
 	router.HandleFunc("/api/products/{id}", DeleteProduct).Methods("DELETE")
 	router.HandleFunc("/api/products/{id}", UpdateProduct).Methods("PATCH")
 	router.HandleFunc("/api/products/{id}", ShowProduct).Methods("GET")
-	router.Use(loggingMiddleware)
 	return router
 }
 
@@ -126,13 +125,13 @@ func CreateProduct(w http.ResponseWriter, req *http.Request) {
 func DeleteProduct(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	ProductID := mux.Vars(req)["id"]
-	isExist_ := isExist("SELECT id FROM products WHERE id = ?", ProductID)
+	isExist_ := isExist("SELECT id FROM products WHERE id = ?", productID)
 	if !isExist_ {
 		w.WriteHeader(http.StatusNotFound)
 		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
 			Title:  "Not Found",
 			Status: strconv.Itoa(http.StatusNotFound),
-			Detail: fmt.Sprintf("Product with id %s not found", ProductID),
+			Detail: fmt.Sprintf("Product with id %s not found", productID),
 		}})
 	} else {
 		conn := connect()
