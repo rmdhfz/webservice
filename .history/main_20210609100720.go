@@ -179,32 +179,3 @@ func UpdateProduct(w http.ResponseWriter, req *http.Request) {
 		renderJson(w, &product)
 	}
 }
-
-func ShowProduct(w http.ResponseWriter, req *http.Request) {
-	productID := mux.Vars(req)["id"]
-	isExist_ := isExist("SELECT id FROM products WHERE id = ?", productID)
-	if !isExist_ {
-		w.WriteHeader(http.StatusNotFound)
-		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
-			Title:  "Not Found",
-			Status: strconv.Itoa(http.StatusNotFound),
-			Detail: fmt.Sprintf("Product with id %s not found", productID),
-		}})
-	} else {
-		conn := connect()
-		defer conn.Close()
-
-		query, err := conn.Query("SELECT id, name, price FROM products WHERE id = ?", productID)
-		if err != nil {
-			log.Print(err)
-			return
-		}
-		var product Product
-		for query.Next() {
-			if err := query.Scan(&product.ID, &product.Name, &product.Price); err != nil {
-				log.Print(err)
-			}
-		}
-		renderJson(w, &product)
-	}
-}

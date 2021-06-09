@@ -194,17 +194,9 @@ func ShowProduct(w http.ResponseWriter, req *http.Request) {
 		conn := connect()
 		defer conn.Close()
 
-		query, err := conn.Query("SELECT id, name, price FROM products WHERE id = ?", productID)
+		query, err := conn.Query("SELECT id, name, price FROM product WHERE id = ?", productID)
 		if err != nil {
 			log.Print(err)
-			return
 		}
-		var product Product
-		for query.Next() {
-			if err := query.Scan(&product.ID, &product.Name, &product.Price); err != nil {
-				log.Print(err)
-			}
-		}
-		renderJson(w, &product)
 	}
 }
