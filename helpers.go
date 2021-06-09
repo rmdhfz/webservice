@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/jsonapi"
 )
 
 func connect() *sql.DB {
@@ -21,4 +23,10 @@ func connect() *sql.DB {
 		log.Fatal(err)
 	}
 	return db
+}
+
+func renderJson(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	jsonapi.MarshalPayload(w, data)
 }

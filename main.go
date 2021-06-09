@@ -5,19 +5,21 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/jsonapi"
 	"github.com/gorilla/mux"
 )
 
 type Product struct {
-	ID    int
-	Name  string
-	Price int
+	ID    int64  `jsonapi:"primary,products"`
+	Name  string `jsonapi:"attr,name"`
+	Price int    `jsonapi:"attr,price"`
 }
 
 func Server() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/", handleHome).Methods("GET")
 	router.HandleFunc("/api/products", BrowseProduct).Methods("GET")
+	router.HandleFunc("/api/products", CreateProduct).Methods("POST")
 	return router
 }
 
@@ -26,11 +28,6 @@ func main() {
 	defer conn.Close()
 	router := Server()
 	log.Fatal(http.ListenAndServe(":8080", router))
-}
-
-func renderJson(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
 }
 
 func handleHome(writer http.ResponseWriter, request *http.Request) {
@@ -62,4 +59,30 @@ func BrowseProduct(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 	renderJson(writer, products)
+}
+
+func CreateProduct(w http.ResponseWriter, req *http.Request) {
+	var product Product
+	err := jsonapi.UnmarshalPayload(req.Body, &product)
+	if err != nil {
+		log.Print(err)
+	}
+	conn := connect()
+	defer conn.Close()
+	query, err := conn.Prepare("INSERT INTO products (name, price) VALUES (?, ?)")
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	result, err := query.Exec(product.Name, product.Price)
+	if err != nil {
+		log.Print(err)
+	}
+	lastId, err := result.LastInsertId()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	product.ID = lastId
+	renderJson(w, &product)
 }
