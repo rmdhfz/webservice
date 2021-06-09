@@ -69,10 +69,8 @@ func CreateProduct(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
 			Title: "ValidationError",
-			Status: strconv.Itoa(http.StatusUnprocessableEntity),
-			Detail: "Given request Body was invalid"
+			Status: strconv.Itoa(http.StatusUnprocessableEntity)
 		}})
-		return
 	}
 	conn := connect()
 	defer conn.Close()

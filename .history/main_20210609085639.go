@@ -72,7 +72,6 @@ func CreateProduct(w http.ResponseWriter, req *http.Request) {
 			Status: strconv.Itoa(http.StatusUnprocessableEntity),
 			Detail: "Given request Body was invalid"
 		}})
-		return
 	}
 	conn := connect()
 	defer conn.Close()
