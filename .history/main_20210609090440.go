@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -105,18 +104,6 @@ func DeleteProduct(w http.ResponseWriter, req *http.Request) {
 
 	result, err := conn.Exec("DELETE FROM products WHERE id = ?", ProductID)
 	if err != nil {
-		log.Print(err)
-		return
+		
 	}
-	
-	affected, err := result.RowsAffected()
-	if affected == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
-			Title: "Not Found",
-			Status: strconv.Itoa(http.StatusNotFound),
-			Detail: fmt.Sprintf("Product with id %s not found", ProductID)
-		}})
-	}
-	w.WriteHeader(http.StatusNoContent)
 }
