@@ -13,7 +13,7 @@ import (
 )
 
 type Product struct {
-	ID    int64  `jsonapi:"primary,produtcs"`
+	ID    int64  `jsonapi:"attr,id"`
 	Name  string `jsonapi:"attr,name"`
 	Price int    `jsonapi:"attr,price"`
 }

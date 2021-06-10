@@ -13,9 +13,10 @@ import (
 )
 
 type Product struct {
-	ID    int64  `jsonapi:"primary,produtcs"`
-	Name  string `jsonapi:"attr,name"`
-	Price int    `jsonapi:"attr,price"`
+	__Typename string `jsonapi:"primary,produtcs"`
+	ID         int64  `jsonapi:"attr,id"`
+	Name       string `jsonapi:"attr,name"`
+	Price      int    `jsonapi:"attr,price"`
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -35,8 +36,8 @@ func Server() *mux.Router {
 	router.HandleFunc("/api/products/{id}", DeleteProduct).Methods("DELETE")
 	router.HandleFunc("/api/products/{id}", UpdateProduct).Methods("PATCH")
 	router.HandleFunc("/api/products/{id}", ShowProduct).Methods("GET")
+	router.Host("www.google.com")
 	router.Use(loggingMiddleware)
-	router.Use(mux.CORSMethodMiddleware(router))
 	return router
 }
 
@@ -72,7 +73,6 @@ func isExist(query string, args string) bool {
 }
 
 func BrowseProduct(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	conn := connect()
 	defer conn.Close()
 	rows, err := conn.Query("SELECT * FROM products")

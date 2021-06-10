@@ -13,7 +13,7 @@ import (
 )
 
 type Product struct {
-	ID    int64  `jsonapi:"primary,produtcs"`
+	ID    int64  `jsonapi:"attr,id"`
 	Name  string `jsonapi:"attr,name"`
 	Price int    `jsonapi:"attr,price"`
 }
@@ -72,7 +72,6 @@ func isExist(query string, args string) bool {
 }
 
 func BrowseProduct(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	conn := connect()
 	defer conn.Close()
 	rows, err := conn.Query("SELECT * FROM products")

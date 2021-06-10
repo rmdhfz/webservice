@@ -30,7 +30,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 func Server() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/", handleHome).Methods("GET")
-	router.HandleFunc("/api/products", BrowseProduct).Methods("GET")
+	router.HandleFunc("/api/products", BrowseProduct).Methods(http.MethodPut)
 	router.HandleFunc("/api/products", CreateProduct).Methods("POST")
 	router.HandleFunc("/api/products/{id}", DeleteProduct).Methods("DELETE")
 	router.HandleFunc("/api/products/{id}", UpdateProduct).Methods("PATCH")

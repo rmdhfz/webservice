@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,12 +31,6 @@ func renderJson(w http.ResponseWriter, data interface{}) {
 	jsonapi.MarshalPayload(w, data)
 }
 
-func outputJSON(w http.ResponseWriter, o interface{}) {
-	res, err := json.Marshal(o)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
+func renderJson(w http.ResponseWriter, o interface{}) {
+
 }
